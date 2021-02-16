@@ -15,11 +15,13 @@
 
 .INFO
     Author:  Andrew Schumacher
-    GitHub: https://github.com/Schu-
+    GitHub: https://github.com/Schu-/NCentral-BitLocker
 
 .VERSION
     V0.65
 #>
+#Start Verbose Logging#
+Start-Transcript -Path "C:\kits\ncentral\logs\ncentral-bitlocker.txt"
 
 ##Variables START##
 

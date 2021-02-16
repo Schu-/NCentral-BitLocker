@@ -30,16 +30,23 @@ These are the actions that can currently be performed on a device.
 ```
 
 
+### Logging
+
+The powershell script is setup to have verbose logging on each run. It does not append its log, but this can be changed by adding -Append. The logs output location is as follows.
+
+```
+C:\kits\ncentral\logs\ncentral-bitlocker.txt
+```
+
 ## ToDo
 
 I am looking to implement the following if time permits:
 
 ```
 1. Secure Device Function
-2. Better Logging
-3. Better Error Handling
-4. Better TPM Support
-5. More Testing!!!
+2. Better Error Handling
+3. Better TPM Support
+4. More Testing!!!
 ```
 
 
