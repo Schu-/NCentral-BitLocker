@@ -43,13 +43,12 @@ C:\kits\ncentral\logs\ncentral-bitlocker.txt
 I am looking to implement the following if time permits:
 
 ```
-1. Secure Device Function
-2. Better Error Handling
-3. Better TPM Support
-4. More Testing!!!
+1. Secure Device Function (Cause BitLocker Recovery)
+2. Better TPM Support
+3. More Testing!!!
 ```
 
 
 ## Authors
 
-* **Andrew Schumacher**
+**Andrew Schumacher**
