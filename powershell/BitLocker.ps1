@@ -26,11 +26,11 @@ Start-Transcript -Path "C:\kits\ncentral\logs\ncentral-bitlocker.txt"
 
 #Setup Windows Logging
 $winlogsource = [System.Diagnostics.EventLog]::SourceExists("NCentral-Bitlocker")
-if ($winlogsource -eq "False") {
+if ($winlogsource -eq $false) {
     New-EventLog –LogName "Application" –Source “NCentral-BitLocker”
-    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1000 -EntryType Information -Message "NCentral-BitLocker is starting... Device did not have EventLog source NCentral-BitLocker."
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3000 -EntryType Information -Message "NCentral-BitLocker is starting..."
 } else {
-    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1001 -EntryType Information -Message "NCentral-BitLocker is starting... Device has EventLog source NCentral-BitLocker."
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3001 -EntryType Information -Message "NCentral-BitLocker is starting..."
 }
 
 ##Variables START##
@@ -50,16 +50,16 @@ function Get-BitLockerStatus {
 $bde_status = Get-Bitlockervolume
 if ($bde_status.ProtectionStatus -eq 'on' -and $bde_status.VolumeStatus -eq 'FullyEncrypted') {
     $global:device_status = 'encrypted'
-    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1020 -EntryType Information -Message "Device is Encrypted."
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3020 -EntryType Information -Message "Device is Encrypted."
 } elseif (($bde_status.VolumeStatus -eq 'EncryptionInProgress') -or ($bde_status.VolumeStatus -eq 'DecryptionInProgress')) {
     $global:device_status = 'encrypting-decrpyting'
-    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1020 -EntryType Warning -Message "Device is Encrypting or Decrypting."
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3020 -EntryType Warning -Message "Device is Encrypting or Decrypting."
 } elseif ($bde_status.ProtectionStatus -eq 'off' -and $bde_status.VolumeStatus -eq 'FullyDecrypted') {
     $global:device_status = 'not_encrypted'
-    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1020 -EntryType Information -Message "Device is not Encrypted."
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3020 -EntryType Information -Message "Device is not Encrypted."
 } else { 
     $global:device_status = 'bitlock_issues'
-    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1020 -EntryType Error -Message "Device is in an odd BitLocker State. Please check BitLocker status with manage-bde -status command. "
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3020 -EntryType Error -Message "Device is in an odd BitLocker State. Please check BitLocker status with manage-bde -status command. "
     exit 1
 }
 }
@@ -83,19 +83,23 @@ function Get-BitLockerProtector {
         Write-Output "Writing new password protector"
         Add-BitLockerKeyProtector -MountPoint $env:SystemDrive -RecoveryPasswordProtector
         
-        #Pull out Password Protector ID 
+        #Check for a Recovery Password
+        $global:bde_protector = Get-BitLockerVolume -MountPoint $env:SystemDrive
+        $bde_protect_rcpw = $global:bde_protector.KeyProtector | Where-Object { $_.KeyProtectorType -eq 'RecoveryPassword' }
+
+        #Pull out Password Protector ID
         $bde_rcid = $bde_protect_rcpw.KeyProtectorID
         
         #Add Protector to AD
         Write-Output "Saving to AD"
         manage-bde -protectors -adbackup $env:SystemDrive -id "$bde_rcid"
-       
+
         #Confirm Protector Saved
         if ($lastexitcode -ne '0') {
-            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1010 -EntryType Error -Message "Device Recovery Key failed to save to AD."
+            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3010 -EntryType Error -Message "Device Recovery Key failed to save to AD."
             exit 1
         } else {
-            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1015 -EntryType Information -Message "Device Recovery Key saved correctly to AD."
+            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3015 -EntryType Information -Message "Device Recovery Key saved correctly to AD."
         }
     } else {
         #Pull out Password Protector ID 
@@ -107,10 +111,10 @@ function Get-BitLockerProtector {
 
         #Confirm Protector Saved
         if ($lastexitcode -ne '0') {
-            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1010 -EntryType Error -Message "Device Recovery Key failed to save to AD."
+            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3010 -EntryType Error -Message "Device Recovery Key failed to save to AD."
             exit 1
         } else {
-            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1015 -EntryType Information -Message "Device Recovery Key saved correctly to AD."
+            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3015 -EntryType Information -Message "Device Recovery Key saved correctly to AD."
         }
     }        
 }
@@ -131,16 +135,15 @@ function Set-BitLockerEncrypt {
 
     #Confirm Encryption Sucess
     if ($lastexitcode -ne '0') {
-        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1025 -EntryType Error -Message "Device Encryption failed. Please run manage-bde -status to get a status of devices BitLocker."
+        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3025 -EntryType Error -Message "Device Encryption failed. Please run manage-bde -status to get a status of devices BitLocker."
         exit 1
     } else {
         Write-Output "Rebooting, Success!!"
         $bitlocker_result = "Rebooting, Success!!"
-        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1025 -EntryType Information -Message "Device Encryption enabled correctly. Rebooting & Starting Encryption."
+        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3025 -EntryType Information -Message "Device Encryption enabled correctly. Rebooting & Starting Encryption."
         Shutdown /r /f /t 0
         Exit    
         }    
-
 }
 
 function Set-BitLockerPWChange {
@@ -159,15 +162,15 @@ function Set-BitLockerPWChange {
 
     #Confirm Password Change Success
     if ($lastexitcode -ne '0') {
-        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1030 -EntryType Error -Message "Device Encryption password failed to change. Please run manage-bde -status to get a status of devices BitLocker."
+        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3030 -EntryType Error -Message "Device Encryption password failed to change. Please run manage-bde -status to get a status of devices BitLocker."
         exit 1
     } else {
         Write-Output "Rebooting, Success!!"
         $bitlocker_result = "Rebooting, Success!!"
-        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1030 -EntryType Information -Message "Device Encryption password changed correctly. Rebooting device to confirm."
+        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3030 -EntryType Information -Message "Device Encryption password changed correctly. Rebooting device to confirm."
         Shutdown /r /f /t 0
         Exit    
-        }    
+        }  
 }
 
 function Set-BitLockerDecrypt {
@@ -177,15 +180,15 @@ function Set-BitLockerDecrypt {
 
     #Confirm Decryption Success
     if ($lastexitcode -ne '0') {
-        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1035 -EntryType Error -Message "Device Decryption failed. Please run manage-bde -status to get a status of devices BitLocker."
+        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3035 -EntryType Error -Message "Device Decryption failed. Please run manage-bde -status to get a status of devices BitLocker."
         exit 1
     } else {
         Write-Output "Decrypting System"
         $bitlocker_result = "Decrypting System"
-        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 1035 -EntryType Information -Message "Device Decryption started. Rebooting device to confirm."
+        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3035 -EntryType Information -Message "Device Decryption started. Rebooting device to confirm."
         Shutdown /r /f /t 0
         Exit    
-        }  
+        } 
 }
 
 ##FUNCTIONS END##
@@ -214,10 +217,11 @@ if ($bitlocker_task -eq "encrypt" -and $global:device_status -eq "not_encrypted"
     #Try to Change Password
     Set-BitLockerPWChange  
 } else {
-    #Task Not Set
-    Write-Output "Encryption task not set. Confirm OFF is not set in Nable"
-    $bitlocker_result = "Encryption task not set. Confirm OFF is not set in Nable"
+    #Issues & Task did not run
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3035 -EntryType Information -Message "Issues"
+    Write-Output "Issues"
+    $bitlocker_result = "Issues"
     $bitlocker_status = $global:device_status
-    Exit 1
+    exit 1
 }
 ##SCRIPT END##
