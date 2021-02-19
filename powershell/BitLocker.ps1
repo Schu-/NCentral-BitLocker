@@ -19,7 +19,7 @@
     GitHub: https://github.com/Schu-/NCentral-BitLocker
 
 .VERSION
-    V0.80
+    V0.91
 #>
 #Start Verbose Logging#
 Start-Transcript -Path "C:\kits\ncentral\logs\ncentral-bitlocker.txt"
@@ -191,6 +191,21 @@ function Set-BitLockerDecrypt {
         } 
 }
 
+function Set-BitLockerSecured {
+    #Check for a Recovery Protectors
+    $global:bde_protector = Get-BitLockerVolume -MountPoint $env:SystemDrive
+    $bde_recoverykeys = $global:bde_protector.KeyProtector | Where-Object { $_.KeyProtectorType -ne 'RecoveryPassword' }
+    foreach ($bde_rckeys in $bde_recoverykeys) {
+        #Pull out Password Protector ID
+        $rckey_id = $bde_rckeys.KeyProtectorID
+
+        #Delete Recovery Key
+        Remove-BitLockerKeyProtector -MountPoint $env:SystemDrive -KeyProtectorId $rckey_id
+    }
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3045 -EntryType Warning -Message "Device Protectors Deleted. Device in Recovery Mode."
+    shutdown /r /f /t 0    
+}
+
 ##FUNCTIONS END##
 
 
@@ -216,7 +231,10 @@ if ($bitlocker_task -eq "encrypt" -and $global:device_status -eq "not_encrypted"
 } elseif ($bitlocker_task -eq "change pin" -and $global:device_status -eq "encrypted") {
     #Try to Change Password
     Set-BitLockerPWChange  
-} else {
+} elseif ($bitlocker_task -eq "lock device" -and $global:device_status -eq "encrypted") { 
+    #Try to Lock Device
+    Set-BitLockerSecured
+}else {
     #Issues & Task did not run
     Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3035 -EntryType Information -Message "Issues"
     Write-Output "Issues"

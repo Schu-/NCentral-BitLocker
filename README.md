@@ -27,6 +27,7 @@ These are the actions that can currently be performed on a device.
 1. Encrypt
 2. Decrypt
 3. Change PW
+4. Lock Down Device
 ```
 
 
@@ -38,14 +39,17 @@ The powershell script is setup to have verbose logging on each run. It does not 
 C:\kits\ncentral\logs\ncentral-bitlocker.txt
 ```
 
+With v0.80 we have started to write to the Windows Event viewer. You can view log information in the Application log. The application "NCentral-BitLocker" will write during the process of running difrrent tasks. This should help troubleshoot issues if you are having any.
+
 ## ToDo
 
 I am looking to implement the following if time permits:
 
 ```
-1. Secure Device Function (Cause BitLocker Recovery)
-2. Better TPM Support
+1. Better TPM Support
+2. User interaction for PIN?
 3. More Testing!!!
+4. Possibly need some code clean up.
 ```
 
 
