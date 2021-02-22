@@ -20,7 +20,7 @@ To get this to working correctly the following must be setup. Feel free to revie
     2. Group Policy Creation
     3. BitLocker Recovery Keys
 ```
-[BitLocker & N-Central Setup Doc](https://github.com/Schu-/NCentral-BitLocker/tree/main/docs/)
+[BitLocker & N-Central Setup Doc](https://github.com/Schu-/NCentral-BitLocker/blob/main/docs/BitLocker%20%26%20N-Central%20Setup.pdf)
 
 ### Task Actions / Script Functions
 
