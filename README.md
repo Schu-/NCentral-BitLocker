@@ -6,18 +6,21 @@ Once all is setup, you will create a scheduled task using the AMP file. This tas
 
 ## Getting Started
 
-More info to come soon.
-
 ### Prerequisites
 
-The following will need to be setup to make everything work as expdcted. (More info to come)
+To get this to working correctly the following must be setup. Feel free to review the BitLocker & N-Central Setup document for info on how to setup these things.
 
 ```
-1. Server / AD Setup
-    1. BitLocker GPO
-2. N-Central Server Setup
-    1. Custom Properties
+1. N-Central Server Setup
+    1. N-Central Custom Properties Creation
+    2. Setting BitLocker propeties per device
+    3. Creating BitLocker Encryption Task
+2. Customer Setup
+    1. BitLocker Mangement Tools Install
+    2. Group Policy Creation
+    3. BitLocker Recovery Keys
 ```
+[BitLocker & N-Central Setup Doc](https://github.com/Schu-/NCentral-BitLocker/tree/main/docs/)
 
 ### Task Actions / Script Functions
 
@@ -50,6 +53,7 @@ I am looking to implement the following if time permits:
 2. User interaction for PIN?
 3. More Testing!!!
 4. Possibly need some code clean up.
+5. Need to add logic if the PIN is blank. Cant encrypt.
 ```
 
 
