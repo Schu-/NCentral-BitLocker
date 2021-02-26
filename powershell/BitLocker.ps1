@@ -19,7 +19,7 @@
     GitHub: https://github.com/Schu-/NCentral-BitLocker
 
 .VERSION
-    V0.91
+    V0.94
 #>
 #Start Verbose Logging#
 Start-Transcript -Path "C:\kits\ncentral\logs\ncentral-bitlocker.txt"
@@ -43,7 +43,32 @@ $global:bde_protector = $null
 
 ##Variables END##
 
+
 ##FUNCTIONS START##
+
+function Get-BitLockerPass {
+    #Check PIN/Password
+if (($bitlocker_task -eq "encrypt") -or ($bitlocker_task -eq "change pin") -and $null -eq $bitlocker_pin) {
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3005 -EntryType Error -Message "BitLocker PIN/Password Blank & Task Set to Encrypt. FAIL!" 
+    exit 1 
+} elseif (($bitlocker_task -eq "encrypt") -or ($bitlocker_task -eq "change pin") -and $null -ne $bitlocker_pin) {
+    if (($bitlocker_pin -cmatch '[a-z]') -and ($bitlocker_pin -cmatch '[A-Z]') -and ($bitlocker_pin -match '\d') -and ($bitlocker_pin.length -ge 8) -and ($bitlocker_pin -match '!|@|#|%|^|&|$')) {
+        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3007 -EntryType Information -Message "Strong Password Entered. Securing Password." 
+        $global:bitlocker_pw = ConvertTo-SecureString $bitlocker_pin -AsPlainText -Force 
+    } else {
+        if ($bitlocker_pin.length -ge 8) {
+            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3007 -EntryType Warning -Message "Weak Password Entered. Securing Password." 
+            $global:bitlocker_pw = ConvertTo-SecureString $bitlocker_pin -AsPlainText -Force
+        } else {
+            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3007 -EntryType Error -Message "Password does not meet minimum requirements. FAIL!" 
+            exit 1
+        }
+
+    }
+} else {
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3007 -EntryType Information -Message "Task: $bitlocker_task | Device Status: $global:device_status | PIN/Password Not Required"
+}
+}
 
 function Get-BitLockerStatus {
     #Check BitLocker Status
@@ -67,7 +92,7 @@ if ($bde_status.ProtectionStatus -eq 'on' -and $bde_status.VolumeStatus -eq 'Ful
 function Get-PCTPM {
     #Get PC's TPM Status
     $bde_pctpm = Get-Tpm
-    if ($bde_pctpm.TpmPresent -eq "Ture" -and $bde_pctpm.TpmReady -eq "True" -and $bde_pctpm.TpmEnabled -eq "True" ) {
+    if ($bde_pctpm.TpmPresent -eq "True" -and $bde_pctpm.TpmReady -eq "True" -and $bde_pctpm.TpmEnabled -eq "True" ) {
         $global:bde_pctpm_status = "ready"
     } else {
         $global:bde_pctpm_status = "not_ready"
@@ -186,7 +211,7 @@ function Set-BitLockerDecrypt {
         Write-Output "Decrypting System"
         $bitlocker_result = "Decrypting System"
         Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3035 -EntryType Information -Message "Device Decryption started. Rebooting device to confirm."
-        Shutdown /r /f /t 0
+        Shutdown /r /f /t 2
         Exit    
         } 
 }
@@ -212,13 +237,13 @@ function Set-BitLockerSecured {
 
 ##SCRIPT START##
 
-#Convert Custom Properties String
-$global:bitlocker_pw = ConvertTo-SecureString $bitlocker_pin -AsPlainText -Force
-
 
 #Check BitLocker & TPM Status
 Get-BitLockerStatus
 Get-PCTPM
+
+#Check BitLocker PIN/Password
+Get-BitLockerPass
 
 
 #Confirm BitLocker Task & Proceed
@@ -236,10 +261,7 @@ if ($bitlocker_task -eq "encrypt" -and $global:device_status -eq "not_encrypted"
     Set-BitLockerSecured
 }else {
     #Issues & Task did not run
-    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3035 -EntryType Information -Message "Issues"
-    Write-Output "Issues"
-    $bitlocker_result = "Issues"
-    $bitlocker_status = $global:device_status
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3035 -EntryType Error -Message "Task: $bitlocker_task | Device Status: $global:device_status | FAILED!  "
     exit 1
 }
 ##SCRIPT END##

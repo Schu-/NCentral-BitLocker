@@ -52,8 +52,6 @@ I am looking to implement the following if time permits:
 1. Better TPM Support
 2. User interaction for PIN?
 3. More Testing!!!
-4. Possibly need some code clean up.
-5. Need to add logic if the PIN is blank. Cant encrypt.
 ```
 
 
