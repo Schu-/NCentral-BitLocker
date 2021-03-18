@@ -10,8 +10,6 @@
     bitlocker_task
 
 .OUTPUTS
-    bitlocker_result
-    bitlocker_status
     Windows Event Log (Application Log / NCentral-BitLocker)
 
 .INFO
@@ -19,10 +17,10 @@
     GitHub: https://github.com/Schu-/NCentral-BitLocker
 
 .VERSION
-    V0.94
+    V1.0
 #>
-#Start Verbose Logging#
-Start-Transcript -Path "C:\kits\ncentral\logs\ncentral-bitlocker.txt"
+#Start Transcript Logging# Warning: The Encryption Recovery Key will print in this log. This is Insecure!!
+#Start-Transcript -Path "C:\kits\ncentral\logs\ncentral-bitlocker.txt"
 
 #Setup Windows Logging
 $winlogsource = [System.Diagnostics.EventLog]::SourceExists("NCentral-Bitlocker")
@@ -156,7 +154,12 @@ function Set-BitLockerEncrypt {
     
     #Encrypt
     Write-Output "Attempting Encrypt..."
-    Enable-BitLocker -MountPoint $env:SystemDrive -PasswordProtector $global:bitlocker_pw
+    if ($global:bde_pctpm_status -eq "ready") {
+        Enable-BitLocker -MountPoint $env:SystemDrive -TpmAndPinProtector $global:bitlocker_pw
+    } else {
+        Enable-BitLocker -MountPoint $env:SystemDrive -PasswordProtector $global:bitlocker_pw
+    }    
+
 
     #Confirm Encryption Sucess
     if ($lastexitcode -ne '0') {
@@ -164,7 +167,6 @@ function Set-BitLockerEncrypt {
         exit 1
     } else {
         Write-Output "Rebooting, Success!!"
-        $bitlocker_result = "Rebooting, Success!!"
         Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3025 -EntryType Information -Message "Device Encryption enabled correctly. Rebooting & Starting Encryption."
         Shutdown /r /f /t 0
         Exit    
@@ -177,13 +179,23 @@ function Set-BitLockerPWChange {
 
     #Find Password Protector & Pruge
     Write-Output "Attempting Protector Removal..."
-    $bde_protect_pw = $global:bde_protector.KeyProtector | Where-Object { $_.KeyProtectorType -eq 'Password' }
-    $bde_pwid = $bde_protect_pw.KeyProtectorID
-    Remove-BitLockerKeyProtector -MountPoint $env:SystemDrive -KeyProtectorId $bde_pwid
+    if ($global:bde_pctpm_status -eq "ready") {
+        $bde_protect_pw = $global:bde_protector.KeyProtector | Where-Object { $_.KeyProtectorType -eq 'TpmAndPinProtector' }
+        $bde_pwid = $bde_protect_pw.KeyProtectorID
+        Remove-BitLockerKeyProtector -MountPoint $env:SystemDrive -KeyProtectorId $bde_pwid
+    } else {
+        $bde_protect_pw = $global:bde_protector.KeyProtector | Where-Object { $_.KeyProtectorType -eq 'Password' }
+        $bde_pwid = $bde_protect_pw.KeyProtectorID
+        Remove-BitLockerKeyProtector -MountPoint $env:SystemDrive -KeyProtectorId $bde_pwid
+    }
 
     #Add/Update Password
     Write-Output "Attempting Protector Addition..."
-    Add-BitLockerKeyProtector -MountPoint $env:SystemDrive -PasswordProtector $global:bitlocker_pw
+    if ($global:bde_pctpm_status -eq "ready") {
+        Add-BitLockerKeyProtector -MountPoint $env:SystemDrive -TpmAndPinProtector $global:bitlocker_pw
+    } else {
+        Add-BitLockerKeyProtector -MountPoint $env:SystemDrive -PasswordProtector $global:bitlocker_pw
+    } 
 
     #Confirm Password Change Success
     if ($lastexitcode -ne '0') {
@@ -191,7 +203,6 @@ function Set-BitLockerPWChange {
         exit 1
     } else {
         Write-Output "Rebooting, Success!!"
-        $bitlocker_result = "Rebooting, Success!!"
         Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3030 -EntryType Information -Message "Device Encryption password changed correctly. Rebooting device to confirm."
         Shutdown /r /f /t 0
         Exit    
@@ -203,16 +214,19 @@ function Set-BitLockerDecrypt {
     Write-Output "Decrypting Device"
     Disable-BitLocker -MountPoint $env:SystemDrive
 
+    #Delete Protectors
+    Set-BitLockerProtectorDelete
+
     #Confirm Decryption Success
-    if ($lastexitcode -ne '0') {
-        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3035 -EntryType Error -Message "Device Decryption failed. Please run manage-bde -status to get a status of devices BitLocker."
-        exit 1
-    } else {
+    $bde_status = Get-Bitlockervolume
+    if ($bde_status.VolumeStatus -eq 'DecryptionInProgress') {
         Write-Output "Decrypting System"
-        $bitlocker_result = "Decrypting System"
         Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3035 -EntryType Information -Message "Device Decryption started. Rebooting device to confirm."
-        Shutdown /r /f /t 2
-        Exit    
+        Shutdown /r /f /t 0
+        Exit        
+    } else {
+        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3035 -EntryType Error -Message "Device Decryption failed. Please run manage-bde -status to get a status of devices BitLocker."
+        exit 1    
         } 
 }
 

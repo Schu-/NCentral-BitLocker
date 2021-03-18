@@ -18,7 +18,7 @@ To get this to working correctly the following must be setup. Feel free to revie
 2. Customer Setup
     1. BitLocker Mangement Tools Install
     2. Group Policy Creation
-    3. BitLocker Recovery Keys
+    3. BitLocker Recovery Key Verification
 ```
 [BitLocker & N-Central Setup Doc](https://github.com/Schu-/NCentral-BitLocker/blob/main/docs/BitLocker%20%26%20N-Central%20Setup.pdf)
 
@@ -27,31 +27,31 @@ To get this to working correctly the following must be setup. Feel free to revie
 These are the actions that can currently be performed on a device.
 
 ```
-1. Encrypt
+1. Encrypt w/ PIN (TPM PIN Support in BETA)
 2. Decrypt
-3. Change PW
+3. Change PIN
 4. Lock Down Device
 ```
 
 
 ### Logging
+With v0.80 we have started to write to the Windows Event viewer. You can view log information in the Application log. The application "NCentral-BitLocker" will write during the process of running difrrent tasks. This should help troubleshoot issues if you are having any.
 
-The powershell script is setup to have verbose logging on each run. It does not append its log, but this can be changed by adding -Append. The logs output location is as follows.
+
+Starting with v1.0 we have disabled by default the Transcript Logging. The Encryption Recovery Key prints in this log and this is insecure.
 
 ```
 C:\kits\ncentral\logs\ncentral-bitlocker.txt
 ```
 
-With v0.80 we have started to write to the Windows Event viewer. You can view log information in the Application log. The application "NCentral-BitLocker" will write during the process of running difrrent tasks. This should help troubleshoot issues if you are having any.
 
 ## ToDo
 
-I am looking to implement the following if time permits:
+Here are some things I would like to implement if I am able to get the time:
 
 ```
-1. Better TPM Support
-2. User interaction for PIN?
-3. More Testing!!!
+1. Advanced TPM Support & More Options
+2. Support for user interaction?
 ```
 
 
