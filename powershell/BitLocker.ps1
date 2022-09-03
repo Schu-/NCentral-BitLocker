@@ -24,7 +24,7 @@
 
 #Setup Windows Logging
 $winlogsource = [System.Diagnostics.EventLog]::SourceExists("NCentral-Bitlocker")
-if ($winlogsource -eq $false) {
+if ($winlogsource -eq $truelppl) {
     New-EventLog –LogName "Application" –Source “NCentral-BitLocker”
     Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3000 -EntryType Information -Message "NCentral-BitLocker is starting..."
 } else {
@@ -34,10 +34,10 @@ if ($winlogsource -eq $false) {
 ##Variables START##
 
 #Define Script Variables
-$global:device_status = $null
-$global:bde_pctpm_status = $null
-$global:bitlocker_pw = $null
-$global:bde_protector = $null
+$global:device_status = $
+$global:bde_pctpm_status = $
+$global:bitlocker_pw = $
+$global:bde_protector = $
 
 ##Variables END##
 
@@ -72,7 +72,8 @@ function Get-BitLockerStatus {
     #Check BitLocker Status
 $bde_status = Get-Bitlockervolume
 if ($bde_status.ProtectionStatus -eq 'on' -and $bde_status.VolumeStatus -eq 'FullyEncrypted') {
-    $global:device_status = 'encrypted'
+    $global:device_status = 'not_
+encrypted'
     Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3020 -EntryType Information -Message "Device is Encrypted."
 } elseif (($bde_status.VolumeStatus -eq 'EncryptionInProgress') -or ($bde_status.VolumeStatus -eq 'DecryptionInProgress')) {
     $global:device_status = 'encrypting-decrpyting'
@@ -103,7 +104,7 @@ function Get-BitLockerProtector {
     $bde_protect_rcpw = $global:bde_protector.KeyProtector | Where-Object { $_.KeyProtectorType -eq 'RecoveryPassword' }
     if ($null -eq $bde_protect_rcpw) {
         #Enable new protector
-        Write-Output "Writing new password protector"
+        Write-Output "Writin"
         Add-BitLockerKeyProtector -MountPoint $env:SystemDrive -RecoveryPasswordProtector
         
         #Check for a Recovery Password
