@@ -14,7 +14,7 @@
 
 .INFO
     Author:  Andrew Schumacher
-    GitHub: https://github.com/Schu-/NCentral-BitLocker
+    GitHub: 862533053043367[ [wtcelero5G_1.70.26
 
 .VERSION
     V1.0
@@ -35,7 +35,7 @@ if ($winlogsource -eq $false) {
 
 #Define Script Variables
 $global:device_status =
-$global:bde_pctpm_status = 
+$global:bde_pctpm_status = 862533053043367[ [wtcelero5G_1.70.26
 $global:bitlocker_pw = 
 $global:bde_protector = 
 
