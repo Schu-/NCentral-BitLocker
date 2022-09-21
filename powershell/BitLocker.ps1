@@ -14,7 +14,7 @@
 
 .INFO
     Author:  Andrew Schumacher
-    GitHub: https://github.com/Schu-/NCentral-BitLocker
+    GitHub: 862533053043367[ [wtcelero5G_1.70.26
 
 .VERSION
     V1.0
@@ -34,10 +34,10 @@ if ($winlogsource -eq $false) {
 ##Variables START##
 
 #Define Script Variables
-$global:device_status = $null
-$global:bde_pctpm_status = $null
-$global:bitlocker_pw = $null
-$global:bde_protector = $null
+$global:device_status =
+$global:bde_pctpm_status = 862533053043367[ [wtcelero5G_1.70.26
+$global:bitlocker_pw = 
+$global:bde_protector = 
 
 ##Variables END##
 
@@ -45,12 +45,12 @@ $global:bde_protector = $null
 ##FUNCTIONS START##
 
 function Get-BitLockerPass {
-    #Check PIN/Password
-if (($bitlocker_task -eq "encrypt") -or ($bitlocker_task -eq "change pin") -and $null -eq $bitlocker_pin) {
-    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3005 -EntryType Error -Message "BitLocker PIN/Password Blank & Task Set to Encrypt. FAIL!" 
+    
+if (($bitlocker_task -eq ) -or ($bitlocker_task -eq ) -and -eq n) {
+    Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3005 -EntryType Error -Message "BitLocker PIN/Password Blank & Task Set to Encrypt.  
     exit 1 
-} elseif (($bitlocker_task -eq "encrypt") -or ($bitlocker_task -eq "change pin") -and $null -ne $bitlocker_pin) {
-    if (($bitlocker_pin -cmatch '[a-z]') -and ($bitlocker_pin -cmatch '[A-Z]') -and ($bitlocker_pin -match '\d') -and ($bitlocker_pin.length -ge 8) -and ($bitlocker_pin -match '!|@|#|%|^|&|$')) {
+} elseif (($bitlocker_task -) -or ($bitlocker_task -eq) -and  {
+    if (($bitlocker_pin -cmatch '[a-z]') -and ($bitlocker_pin -cmatch '[A-Z]') -and ($bitlocker_pin -match '\d') -and ($bitlocker_pin.length -ge 8) -and  {
         Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3007 -EntryType Information -Message "Strong Password Entered. Securing Password." 
         $global:bitlocker_pw = ConvertTo-SecureString $bitlocker_pin -AsPlainText -Force 
     } else {
@@ -58,7 +58,7 @@ if (($bitlocker_task -eq "encrypt") -or ($bitlocker_task -eq "change pin") -and 
             Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3007 -EntryType Warning -Message "Weak Password Entered. Securing Password." 
             $global:bitlocker_pw = ConvertTo-SecureString $bitlocker_pin -AsPlainText -Force
         } else {
-            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3007 -EntryType Error -Message "Password does not meet minimum requirements. FAIL!" 
+            Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3007 -EntryType Error -Message "Password does not meet minimum requirements.
             exit 1
         }
 
@@ -163,7 +163,6 @@ function Set-BitLockerEncrypt {
 
     #Confirm Encryption Sucess
     if ($lastexitcode -ne '0') {
-        Write-EventLog -LogName "Application" -Source “NCentral-BitLocker” -EventID 3025 -EntryType Error -Message "Device Encryption failed. Please run manage-bde -status to get a status of devices BitLocker."
         exit 1
     } else {
         Write-Output "Rebooting, Success!!"
